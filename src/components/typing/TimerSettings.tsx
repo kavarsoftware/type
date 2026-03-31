@@ -1,0 +1,66 @@
+'use client';
+
+import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { TimerMode, TimerSettings } from '@/lib/typing/types';
+import { cn } from '@/lib/utils';
+
+interface TimerSettingsProps {
+  settings: TimerSettings;
+  onSettingsChange: (settings: TimerSettings) => void;
+}
+
+const timerOptions: { mode: TimerMode; label: string }[] = [
+  { mode: 'none', label: 'No Timer' },
+  { mode: '1min', label: '1 Min' },
+  { mode: '5min', label: '5 Min' },
+  { mode: 'custom', label: 'Custom' },
+];
+
+export function TimerSettings({ settings, onSettingsChange }: TimerSettingsProps) {
+  return (
+    <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/30 border border-border/50">
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <Clock className="w-4 h-4" />
+        Timer Mode
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {timerOptions.map((option) => (
+          <Button
+            key={option.mode}
+            variant={settings.mode === option.mode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onSettingsChange({ ...settings, mode: option.mode })}
+            className={cn(
+              "transition-all",
+              settings.mode === option.mode && "shadow-md"
+            )}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
+      {settings.mode === 'custom' && (
+        <div className="flex items-center gap-3 mt-2">
+          <Label htmlFor="custom-time" className="text-sm text-muted-foreground whitespace-nowrap">
+            Seconds:
+          </Label>
+          <Input
+            id="custom-time"
+            type="number"
+            min={10}
+            max={3600}
+            value={settings.customSeconds || 60}
+            onChange={(e) => onSettingsChange({
+              ...settings,
+              customSeconds: Math.max(10, Math.min(3600, parseInt(e.target.value) || 60))
+            })}
+            className="w-24"
+          />
+        </div>
+      )}
+    </div>
+  );
+}

@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import { cn } from '@/lib/utils';
 import type { CharacterStatus } from '@/lib/typing/types';
 
@@ -10,7 +12,14 @@ interface TypingDisplayProps {
   typedText: string;
 }
 
+function isArabicText(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
 export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
+  const { language } = useTypingStore();
+  const isRtl = isArabicText(text) || language === 'ar';
+
   // Pre-calculate all character statuses
   const characters = useMemo(() => {
     return text.split('').map((char, index) => {
@@ -29,7 +38,7 @@ export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
     const result: Array<Array<{ char: string; status: CharacterStatus; index: number }>> = [];
     let currentLine: Array<{ char: string; status: CharacterStatus; index: number }> = [];
     let charCount = 0;
-    const charsPerLine = 70; // Approximate characters per line
+    const charsPerLine = 70;
 
     characters.forEach((charData) => {
       currentLine.push(charData);
@@ -67,11 +76,20 @@ export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
   const visibleEndLine = Math.min(lines.length, currentLineIndex + 4);
   const visibleLines = lines.slice(visibleStartLine, visibleEndLine);
 
-  // Calculate how many lines are completed (before visible start)
+  // Calculate completed lines count
   const completedLinesCount = visibleStartLine;
+  const remainingLinesCount = lines.length - visibleEndLine;
 
   return (
-    <div className="font-mono text-xl leading-relaxed tracking-wide min-h-[180px]">
+    <div
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className={cn(
+        "text-xl leading-relaxed min-h-[180px]",
+        isRtl
+          ? "text-right font-sans tracking-normal"
+          : "text-left font-mono tracking-wide"
+      )}
+    >
       {/* Show completed lines indicator */}
       {completedLinesCount > 0 && (
         <motion.div
@@ -79,14 +97,13 @@ export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
           animate={{ opacity: 1 }}
           className="text-sm text-muted-foreground/50 mb-2 text-center"
         >
-          ✓ {completedLinesCount} line{completedLinesCount > 1 ? 's' : ''} completed
+          ✓ {completedLinesCount} {getTranslation(language, 'linesCompleted')}
         </motion.div>
       )}
       
       <AnimatePresence mode="sync">
         {visibleLines.map((line, lineIndex) => {
           const actualLineIndex = visibleStartLine + lineIndex;
-          const isCurrentLine = actualLineIndex === currentLineIndex;
           const isCompletedLine = actualLineIndex < currentLineIndex;
           
           return (
@@ -105,16 +122,21 @@ export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
                 <span
                   key={index}
                   className={cn(
-                    "relative inline-block transition-colors duration-0",
+                    // Use `inline` (not `inline-block`) so the browser's Arabic text-shaping
+                    // engine can join letters across adjacent spans (ligatures, etc.)
+                    "relative inline transition-colors duration-0",
                     status === 'correct' && "text-foreground",
-                    status === 'incorrect' && "text-destructive bg-destructive/20 underline",
+                    status === 'incorrect' && "text-destructive underline",
                     status === 'current' && "text-muted-foreground",
                     status === 'pending' && "text-muted-foreground/40"
                   )}
                 >
                   {status === 'current' && (
                     <motion.span 
-                      className="absolute left-0 top-0 w-0.5 h-full bg-primary"
+                      className={cn(
+                        "absolute top-0 w-0.5 h-full bg-primary",
+                        isRtl ? "right-0" : "left-0"
+                      )}
                       animate={{ opacity: [1, 0.5, 1] }}
                       transition={{ duration: 0.8, repeat: Infinity }}
                     />
@@ -134,13 +156,13 @@ export function TypingDisplay({ text, typedText }: TypingDisplayProps) {
       </AnimatePresence>
       
       {/* Show remaining lines indicator */}
-      {visibleEndLine < lines.length && (
+      {remainingLinesCount > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-sm text-muted-foreground/50 mt-2 text-center"
         >
-          {lines.length - visibleEndLine} more line{lines.length - visibleEndLine > 1 ? 's' : ''} remaining
+          {remainingLinesCount} {getTranslation(language, 'linesRemaining')}
         </motion.div>
       )}
     </div>

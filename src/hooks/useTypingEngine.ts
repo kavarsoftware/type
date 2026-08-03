@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useTypingStore } from '@/store/typing-store';
 import type { TypingStats, SessionResult } from '@/lib/typing/types';
+import { isArabicText, mapKeyToArabic } from '@/lib/typing/arabicTransliteration';
 
 export function useTypingEngine() {
   const {
@@ -152,11 +153,14 @@ export function useTypingEngine() {
 
     // Handle regular character input
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      const newTyped = typedText + e.key;
+      // Map Latin key to Arabic character when in Arabic mode
+      const isArabic = isArabicText(currentText);
+      const char = isArabic ? mapKeyToArabic(e.key) : e.key;
+      const newTyped = typedText + char;
       
       // Check if character is incorrect
       const expectedChar = currentText[typedText.length];
-      if (e.key !== expectedChar) {
+      if (char !== expectedChar) {
         setErrors(errors + 1);
       }
       

@@ -2,10 +2,14 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TimerSettings, AppMode, SessionResult, Progress, Lesson, Category } from '@/lib/typing/types';
-import { allLessons, categories } from '@/lib/typing/lessons';
+import type { TimerSettings, AppMode, SessionResult, Progress, Lesson, Category, Language } from '@/lib/typing/types';
+import { allLessons, categories, getLessons, getCategories } from '@/lib/typing/lessons';
 
 interface TypingState {
+  // Language
+  language: Language;
+  setLanguage: (lang: Language) => void;
+
   // Navigation
   mode: AppMode;
   setMode: (mode: AppMode) => void;
@@ -76,6 +80,13 @@ const initialProgress: Progress = {
 export const useTypingStore = create<TypingState>()(
   persist(
     (set, get) => ({
+      // Language
+      language: 'en',
+      setLanguage: (lang) => {
+        set({ language: lang });
+        get().resetSession();
+      },
+
       // Navigation
       mode: 'menu',
       setMode: (mode) => set({ mode }),
@@ -182,10 +193,11 @@ export const useTypingStore = create<TypingState>()(
     }),
     {
       name: 'typing-progress',
-      partialize: (state) => ({ progress: state.progress }),
+      partialize: (state) => ({ progress: state.progress, language: state.language }),
     }
   )
 );
 
 // Export data accessors
-export { allLessons, categories };
+export { allLessons, categories, getLessons, getCategories };
+

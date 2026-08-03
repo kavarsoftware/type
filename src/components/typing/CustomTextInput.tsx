@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 
 interface CustomTextInputProps {
   onStartTyping: (texts: string[]) => void;
@@ -18,72 +19,29 @@ interface CustomTextInputProps {
 
 // Clean text utility - removes unrecognizable characters and formats paragraphs
 function cleanText(text: string): string {
-  // Remove non-printable characters (keep letters, numbers, punctuation, and whitespace)
   let cleaned = text
-    // Remove control characters except newlines and tabs
     .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    // Remove other non-printable Unicode characters
     .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, ' ')
-    // Replace non-keyboard characters with alternatives
-    .replace(/[●○◦•●■□▪▫◊♦♢]/g, '*')  // bullets
-    .replace(/[─━│┃┄┅┆┇┈┉┊┋┌┍┎┏┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟┠┡┢┣┤┥┦┧┨┩┪┫┬┭┮┯┰┱┲┳┴┵┶┷┸┹┺┻┼┽┾┿╀╁╂╃╄╅╆╇╈╉╊╋]/g, '-')  // box drawing
-    .replace(/[═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬]/g, '=')  // double box drawing
-    .replace(/[←↑→↓↔↕↖↗↘↙]/g, '->')  // arrows
-    .replace(/[∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅]/g, '')  // math symbols
-    .replace(/[€£¥¢¤]/g, '$')  // currency
-    .replace(/[©®™§¶†‡]/g, '')  // legal/punctuation marks
-    .replace(/[«»‹›『』「」【】〔〕〖〗〘〙〚〛]/g, '"')  // quotation marks
-    .replace(/[′″‴]/g, "'")  // prime marks
-    .replace(/[^\x00-\x7F\n]/g, (char) => {
-      // Keep common accented characters and remove others
-      if (/[\u00C0-\u017F\u0100-\u024F]/.test(char)) return char;  // Latin extended
-      if (/[\u0400-\u04FF]/.test(char)) return char;  // Cyrillic
-      return '';  // Remove other non-ASCII
-    })
-    // Normalize multiple spaces to single space
+    .replace(/[●○◦•●■□▪▫◊♦♢]/g, '*')
+    .replace(/[─━│┃┄┅┆┇┈┉┊┋┌┍┎┏┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟┠┡┢┣┤┥┦┧┨┩┪┫┬┭┮┯┰┱┲┳┴┵┶┷┸┹┺┻┼┽┾┿╀╁╂╃╄╅╆╇╈╉╊╋]/g, '-')
+    .replace(/[═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬]/g, '=')
+    .replace(/[←↑→↓↔↕↖↗↘↙]/g, '->')
+    .replace(/[∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅]/g, '')
+    .replace(/[€£¥¢¤]/g, '$')
+    .replace(/[©®™§¶†‡]/g, '')
+    .replace(/[«»‹›『』「」【】〔〕〖〗〘〙〚〛]/g, '"')
+    .replace(/[′″‴]/g, "'")
     .replace(/[ \t]+/g, ' ')
-    // Normalize line endings
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n');
   
-  // Separate paragraphs: detect title-like lines (short lines, often followed by longer content)
-  // and ensure proper spacing
   const lines = cleaned.split('\n');
   const processedLines: string[] = [];
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
-    
-    if (line.length === 0) {
-      // Skip empty lines, we'll add paragraph breaks as needed
-      continue;
-    }
-    
-    // Check if this looks like a title:
-    // - Short line (less than 50 chars)
-    // - Followed by a longer line (paragraph content)
-    // - Doesn't end with typical sentence punctuation
-    const isTitleLike = line.length < 50 && 
-                        nextLine.length > 50 && 
-                        !line.endsWith('.') && 
-                        !line.endsWith(',') &&
-                        !line.endsWith(':') &&
-                        !line.endsWith(';') &&
-                        !/[.!?]$/.test(line);
-    
-    // Add extra newline before title if there's content before it
-    if (isTitleLike && processedLines.length > 0) {
-      processedLines.push(''); // Add blank line before title
-    }
-    
+    if (line.length === 0) continue;
     processedLines.push(line);
-    
-    // Add blank line after a paragraph (long line) if next line is also content
-    if (line.length > 50 && nextLine.length > 0 && nextLine.length < 50) {
-      // This is a paragraph followed by a potential title
-      processedLines.push('');
-    }
   }
   
   return processedLines.join('\n').trim();
@@ -115,10 +73,7 @@ async function parseTxt(file: File): Promise<string> {
 }
 
 async function parsePdf(file: File): Promise<string> {
-  // Dynamic import for browser-only code
   const pdfjsLib = await import('pdfjs-dist').then(mod => mod);
-  
-  // Set worker to local file in public folder
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   
   const arrayBuffer = await file.arrayBuffer();
@@ -129,9 +84,7 @@ async function parsePdf(file: File): Promise<string> {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    
-    // Group items by their Y position to detect lines and potential titles
-    const items = textContent.items as Array<{ str: string; transform: number[]; height?: number }>;
+    const items = textContent.items as Array<{ str: string; transform: number[] }>;
     
     let lastY: number | null = null;
     let pageText = '';
@@ -140,23 +93,14 @@ async function parsePdf(file: File): Promise<string> {
       const str = item.str?.trim();
       if (!str) continue;
       
-      // Filter out non-recognizable characters from this item
-      const cleanStr = str
-        .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '')
-        .replace(/[\u200B-\u200D\uFEFF]/g, '');
-      
-      if (!cleanStr) continue;
-      
-      // Check if we need a newline (different Y position)
       const currentY = item.transform?.[5];
       if (lastY !== null && currentY !== null && Math.abs(currentY - lastY) > 5) {
-        // Different line - add newline
         pageText += '\n';
       } else if (pageText && !pageText.endsWith(' ') && !pageText.endsWith('\n')) {
         pageText += ' ';
       }
       
-      pageText += cleanStr;
+      pageText += str;
       lastY = currentY;
     }
     
@@ -189,6 +133,7 @@ async function parseFile(file: File): Promise<string> {
 }
 
 export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps) {
+  const { language } = useTypingStore();
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,22 +153,22 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
       const cleanedText = cleanText(rawText);
       
       if (cleanedText.length < 10) {
-        throw new Error('The file contains too little text to practice with.');
+        throw new Error(language === 'ar' ? 'الملف يحتوي على نص قليل جداً للتمرين' : 'The file contains too little text to practice with.');
       }
       
       if (cleanedText.length > 10000) {
         setText(cleanedText.substring(0, 10000));
-        setError('Text was truncated to 10,000 characters for optimal performance.');
+        setError(language === 'ar' ? 'تم تقليص النص إلى ١٠,٠٠٠ حرف للأداء الأمثل.' : 'Text was truncated to 10,000 characters for optimal performance.');
       } else {
         setText(cleanedText);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to parse file');
+      setError(err instanceof Error ? err.message : (language === 'ar' ? 'فشل معالجة الملف' : 'Failed to parse file'));
       setFileName(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [language]);
 
   const handleStart = () => {
     const trimmed = text.trim();
@@ -241,12 +186,12 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">Custom Text</h2>
+          <h2 className="text-2xl font-bold">{getTranslation(language, 'customTextHeader')}</h2>
           <p className="text-muted-foreground">
-            Practice with your own content
+            {language === 'ar' ? 'تدرب باستخدام المحتوى الخاص بك' : 'Practice with your own content'}
           </p>
         </div>
       </div>
@@ -256,10 +201,10 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Upload className="w-5 h-5 text-primary" />
-            Upload a File
+            {getTranslation(language, 'uploadFile')}
           </CardTitle>
           <CardDescription>
-            Supported formats: .txt, .pdf, .docx (max 10,000 characters)
+            {getTranslation(language, 'uploadFileDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -275,13 +220,13 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  <span>Processing file...</span>
+                  <span>{language === 'ar' ? 'جاري معالجة الملف...' : 'Processing file...'}</span>
                 </>
               ) : (
                 <>
                   <FileText className="w-5 h-5 text-muted-foreground" />
                   <span className="text-muted-foreground">
-                    {fileName || 'Click to upload or drag and drop'}
+                    {fileName || getTranslation(language, 'dragAndDrop')}
                   </span>
                 </>
               )}
@@ -293,14 +238,14 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
       {/* Text Area */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Or Paste Your Text</CardTitle>
+          <CardTitle className="text-lg">{getTranslation(language, 'pasteText')}</CardTitle>
           <CardDescription>
-            Enter any text you want to practice typing
+            {getTranslation(language, 'pasteTextPlaceholder')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
-            placeholder="Paste your text here..."
+            placeholder={getTranslation(language, 'pasteTextPlaceholder')}
             value={text}
             onChange={(e) => {
               setText(e.target.value);
@@ -317,16 +262,18 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-wrap gap-4 text-sm text-muted-foreground"
             >
-              <span>{text.length.toLocaleString()} characters</span>
-              <span>{wordCount.toLocaleString()} words</span>
-              <span>{paragraphs.length} paragraphs</span>
+              <span>{text.length.toLocaleString()} {getTranslation(language, 'characters')}</span>
+              <span>{wordCount.toLocaleString()} {language === 'ar' ? 'كلمة' : 'words'}</span>
+              <span>{paragraphs.length} {getTranslation(language, 'paragraphs')}</span>
             </motion.div>
           )}
 
           {/* Lesson Size Setting */}
           {text.length > 0 && (
             <div className="flex items-center gap-4 py-2 border-y border-border">
-              <Label htmlFor="lesson-size" className="flex-shrink-0">Lesson Size:</Label>
+              <Label htmlFor="lesson-size" className="flex-shrink-0">
+                {language === 'ar' ? 'حجم الدرس:' : 'Lesson Size:'}
+              </Label>
               <Select
                 value={chunkSize.toString()}
                 onValueChange={(val) => setChunkSize(val === 'all' ? 'all' : parseInt(val))}
@@ -335,11 +282,11 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
                   <SelectValue placeholder="Select size" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Full Text (1 Lesson)</SelectItem>
-                  <SelectItem value="100">100 words (~Half Page)</SelectItem>
-                  <SelectItem value="250">250 words (~1 Page)</SelectItem>
-                  <SelectItem value="500">500 words (~2 Pages)</SelectItem>
-                  <SelectItem value="1000">1000 words (~4 Pages)</SelectItem>
+                  <SelectItem value="all">{language === 'ar' ? 'النص كاملاً' : 'Full Text (1 Lesson)'}</SelectItem>
+                  <SelectItem value="100">{language === 'ar' ? '١٠٠ كلمة' : '100 words (~Half Page)'}</SelectItem>
+                  <SelectItem value="250">{language === 'ar' ? '٢٥٠ كلمة' : '250 words (~1 Page)'}</SelectItem>
+                  <SelectItem value="500">{language === 'ar' ? '٥٠٠ كلمة' : '500 words (~2 Pages)'}</SelectItem>
+                  <SelectItem value="1000">{language === 'ar' ? '١٠٠٠ كلمة' : '1000 words (~4 Pages)'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -360,7 +307,7 @@ export function CustomTextInput({ onStartTyping, onBack }: CustomTextInputProps)
               disabled={text.trim().length < 10}
               size="lg"
             >
-              Start Typing
+              {getTranslation(language, 'startTyping')}
             </Button>
           </div>
         </CardContent>

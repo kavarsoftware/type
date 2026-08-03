@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Timer, Zap, Target, TrendingUp } from 'lucide-react';
+import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { TypingStats } from '@/lib/typing/types';
 
 interface StatsPanelProps {
@@ -23,34 +25,35 @@ function getRemainingTime(elapsed: number, timerMode: string): number | null {
   return null;
 }
 
-export function StatsPanel({ stats, isTyping, isComplete, timerMode }: StatsPanelProps) {
+export function StatsPanel({ stats, timerMode }: StatsPanelProps) {
+  const { language } = useTypingStore();
   const remainingTime = getRemainingTime(stats.elapsedTime, timerMode);
 
   const statItems = [
     {
       icon: Zap,
-      label: 'WPM',
+      label: getTranslation(language, 'wpm'),
       value: stats.wpm,
       color: 'text-amber-500',
       bgColor: 'bg-amber-500/10',
     },
     {
       icon: Target,
-      label: 'Accuracy',
+      label: getTranslation(language, 'accuracy'),
       value: `${stats.accuracy}%`,
       color: 'text-emerald-500',
       bgColor: 'bg-emerald-500/10',
     },
     {
       icon: Timer,
-      label: remainingTime !== null ? 'Time Left' : 'Time',
+      label: getTranslation(language, 'time'),
       value: remainingTime !== null ? formatTime(remainingTime) : formatTime(stats.elapsedTime),
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
     },
     {
       icon: TrendingUp,
-      label: 'Chars',
+      label: getTranslation(language, 'characters'),
       value: `${stats.correctCharacters}/${stats.totalCharacters}`,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',

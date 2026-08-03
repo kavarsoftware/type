@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useTypingStore, categories } from '@/store/typing-store';
+import { useTypingStore, getCategories } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { Category } from '@/lib/typing/types';
 
 interface CategorySelectorProps {
@@ -15,6 +16,9 @@ interface CategorySelectorProps {
 }
 
 export function CategorySelector({ onSelectCategory, onBack }: CategorySelectorProps) {
+  const { language } = useTypingStore();
+  const currentCategories = getCategories(language);
+
   const getCategoryColor = (index: number) => {
     const colors = [
       { text: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'hover:border-emerald-500/50' },
@@ -32,12 +36,14 @@ export function CategorySelector({ onSelectCategory, onBack }: CategorySelectorP
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">Practice Topics</h2>
+          <h2 className="text-2xl font-bold">{getTranslation(language, 'selectCategory')}</h2>
           <p className="text-muted-foreground">
-            Learn interesting facts while improving your typing skills
+            {language === 'ar'
+              ? 'تعلم معلومات ورسائل قيمة أثناء تحسين مهارات الكتابة لديك'
+              : 'Learn interesting facts while improving your typing skills'}
           </p>
         </div>
       </div>
@@ -45,7 +51,7 @@ export function CategorySelector({ onSelectCategory, onBack }: CategorySelectorP
       {/* Categories Grid */}
       <ScrollArea className="h-[calc(100vh-250px)]">
         <div className="grid gap-4 md:grid-cols-2">
-          {categories.map((category, index) => {
+          {currentCategories.map((category, index) => {
             const color = getCategoryColor(index);
             
             return (
@@ -77,11 +83,11 @@ export function CategorySelector({ onSelectCategory, onBack }: CategorySelectorP
                   <CardContent className="pt-0">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
-                        {category.paragraphs.length} paragraphs
+                        {category.paragraphs.length} {getTranslation(language, 'paragraphs')}
                       </Badge>
                       <Badge variant="secondary" className="text-xs flex items-center gap-1">
                         <BookOpen className="w-3 h-3" />
-                        Educational
+                        {language === 'ar' ? 'تعليمي' : 'Educational'}
                       </Badge>
                     </div>
                   </CardContent>

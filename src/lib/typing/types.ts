@@ -1,5 +1,7 @@
 // Types for the touch typing application
 
+export type Language = 'en' | 'ar';
+
 export type CharacterStatus = 'pending' | 'correct' | 'incorrect' | 'current';
 
 export interface CharacterState {

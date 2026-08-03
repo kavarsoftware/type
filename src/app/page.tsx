@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Home, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw, Home, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TypingDisplay } from '@/components/typing/TypingDisplay';
 import { VirtualKeyboard } from '@/components/typing/VirtualKeyboard';
@@ -13,8 +13,9 @@ import { MainMenu } from '@/components/typing/MainMenu';
 import { LessonSelector } from '@/components/typing/LessonSelector';
 import { CategorySelector } from '@/components/typing/CategorySelector';
 import { CustomTextInput } from '@/components/typing/CustomTextInput';
-import { useTypingStore, allLessons } from '@/store/typing-store';
+import { useTypingStore } from '@/store/typing-store';
 import { useTypingEngine } from '@/hooks/useTypingEngine';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { AppMode, Lesson, Category } from '@/lib/typing/types';
 import Image from 'next/image';
 
@@ -41,6 +42,8 @@ export default function TypingApp() {
     setCustomTexts,
     customTextIndex,
     setCustomTextIndex,
+    language,
+    setLanguage,
   } = useTypingStore();
 
   const {
@@ -49,10 +52,15 @@ export default function TypingApp() {
     isComplete,
     stats,
     restart,
-    getCharacterStatus,
   } = useTypingEngine();
 
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+
+  // Sync document root direction and lang
+  useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
 
   // Initialize text when starting a session
   useEffect(() => {
@@ -111,6 +119,12 @@ export default function TypingApp() {
     setCurrentExerciseIndex(0);
   }, [resetSession, setMode]);
 
+  // Toggle Language
+  const toggleLanguage = useCallback(() => {
+    const nextLang = language === 'en' ? 'ar' : 'en';
+    setLanguage(nextLang);
+  }, [language, setLanguage]);
+
   // Navigate exercises in lessons
   const hasNextExercise = selectedLesson && currentExerciseIndex < selectedLesson.content.length - 1;
   const hasPrevExercise = currentExerciseIndex > 0;
@@ -137,16 +151,18 @@ export default function TypingApp() {
 
   const handleNextParagraph = useCallback(() => {
     if (hasNextParagraph && selectedCategory) {
-      setSelectedParagraphIndex(prev => prev + 1);
-      setCurrentText(selectedCategory.paragraphs[selectedParagraphIndex + 1]);
+      const nextIndex = selectedParagraphIndex + 1;
+      setSelectedParagraphIndex(nextIndex);
+      setCurrentText(selectedCategory.paragraphs[nextIndex]);
       resetTyping();
     }
   }, [hasNextParagraph, selectedCategory, selectedParagraphIndex, setSelectedParagraphIndex, setCurrentText, resetTyping]);
 
   const handlePrevParagraph = useCallback(() => {
     if (hasPrevParagraph && selectedCategory) {
-      setSelectedParagraphIndex(prev => prev - 1);
-      setCurrentText(selectedCategory.paragraphs[selectedParagraphIndex - 1]);
+      const prevIndex = selectedParagraphIndex - 1;
+      setSelectedParagraphIndex(prevIndex);
+      setCurrentText(selectedCategory.paragraphs[prevIndex]);
       resetTyping();
     }
   }, [hasPrevParagraph, selectedCategory, selectedParagraphIndex, setSelectedParagraphIndex, setCurrentText, resetTyping]);
@@ -179,7 +195,7 @@ export default function TypingApp() {
   }, [isComplete, selectedLesson, currentExerciseIndex, markLessonComplete]);
 
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="relative min-h-screen flex flex-col">
       {/* Background Image */}
       <div className="fixed inset-0 z-0">
         <Image
@@ -191,6 +207,29 @@ export default function TypingApp() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
       </div>
+
+      {/* Header Bar with Language Switcher */}
+      <header className="relative z-20 px-6 py-3 border-b border-border/50 bg-background/60 backdrop-blur-md flex items-center justify-between">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={handleGoHome}>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            {getTranslation(language, 'appTitle')}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 border-primary/30 hover:bg-primary/10 transition-colors"
+          >
+            <Globe className="w-4 h-4 text-primary" />
+            <span className="font-semibold text-sm">
+              {language === 'en' ? 'العربية' : 'English'}
+            </span>
+          </Button>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 flex flex-col">
@@ -274,7 +313,7 @@ export default function TypingApp() {
                   {selectedLesson && (
                     <div className="text-sm text-muted-foreground">
                       {selectedLesson.title}
-                      <span className="ml-2 text-xs">
+                      <span className="mx-2 text-xs">
                         ({currentExerciseIndex + 1}/{selectedLesson.content.length})
                       </span>
                     </div>
@@ -291,7 +330,7 @@ export default function TypingApp() {
                   {contentSource === 'custom' && customTexts && customTexts.length > 1 && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>📝</span>
-                      <span>Custom Text</span>
+                      <span>{getTranslation(language, 'custom')}</span>
                       <span className="text-xs">
                         ({customTextIndex + 1}/{customTexts.length})
                       </span>
@@ -345,8 +384,8 @@ export default function TypingApp() {
                       onClick={contentSource === 'lesson' ? handlePrevExercise : (contentSource === 'category' ? handlePrevParagraph : handlePrevCustom)}
                       disabled={contentSource === 'lesson' ? !hasPrevExercise : (contentSource === 'category' ? !hasPrevParagraph : !hasPrevCustom)}
                     >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      Previous
+                      <ChevronLeft className="w-4 h-4 mx-1 rtl:rotate-180" />
+                      {getTranslation(language, 'previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -354,8 +393,8 @@ export default function TypingApp() {
                       onClick={contentSource === 'lesson' ? handleNextExercise : (contentSource === 'category' ? handleNextParagraph : handleNextCustom)}
                       disabled={contentSource === 'lesson' ? !hasNextExercise : (contentSource === 'category' ? !hasNextParagraph : !hasNextCustom)}
                     >
-                      Next
-                      <ChevronRight className="w-4 h-4 ml-1" />
+                      {getTranslation(language, 'next')}
+                      <ChevronRight className="w-4 h-4 mx-1 rtl:rotate-180" />
                     </Button>
                   </div>
                 )}
@@ -384,7 +423,7 @@ export default function TypingApp() {
 
       {/* Footer */}
       <footer className="relative z-10 py-4 text-center text-sm text-muted-foreground border-t border-border/50 bg-background/50 backdrop-blur-sm">
-        <p>TypeMaster • Practice touch typing with educational content</p>
+        <p>{getTranslation(language, 'appTitle')} • {getTranslation(language, 'appSubtitle')}</p>
       </footer>
     </div>
   );

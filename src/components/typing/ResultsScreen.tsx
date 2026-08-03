@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { Trophy, RotateCcw, Home, Target, Zap, Clock, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { TypingStats } from '@/lib/typing/types';
 
 interface ResultsScreenProps {
@@ -11,22 +13,31 @@ interface ResultsScreenProps {
   onGoHome: () => void;
 }
 
-function formatTime(seconds: number): string {
+function formatTime(seconds: number, isArabic: boolean): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   if (mins > 0) {
-    return `${mins}m ${secs}s`;
+    return isArabic ? `${mins} دقيقة ${secs} ثانية` : `${mins}m ${secs}s`;
   }
-  return `${secs}s`;
+  return isArabic ? `${secs} ثانية` : `${secs}s`;
 }
 
 export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps) {
+  const { language } = useTypingStore();
+  const isArabic = language === 'ar';
+  
   const isGoodWpm = stats.wpm >= 40;
   const isGreatWpm = stats.wpm >= 60;
   const isExcellentWpm = stats.wpm >= 80;
   const isPerfectAccuracy = stats.accuracy === 100;
 
   const getWpmMessage = () => {
+    if (isArabic) {
+      if (isExcellentWpm) return "سرعة فائقة ومدهشة! أنت محترف كتابة حقيقي!";
+      if (isGreatWpm) return "عمل رائع جداً! سرعتك ممتازة ومثيرة للإعجاب!";
+      if (isGoodWpm) return "أداء جيد جداً! واصل التدريب لتحقيق نتائج أفضل!";
+      return "جهد طيب! بالممارسة المستمرة ستصل للقمة!";
+    }
     if (isExcellentWpm) return "Incredible speed! You're a typing master!";
     if (isGreatWpm) return "Great job! Your speed is impressive!";
     if (isGoodWpm) return "Good work! Keep practicing to improve!";
@@ -64,7 +75,7 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
       {/* Message */}
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">
-          {isPerfectAccuracy ? 'Perfect Accuracy!' : 'Session Complete!'}
+          {getTranslation(language, 'sessionComplete')}
         </h2>
         <p className="text-muted-foreground">{getWpmMessage()}</p>
       </div>
@@ -79,10 +90,10 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         >
           <div className="flex items-center gap-2 mb-1">
             <Zap className="w-4 h-4 text-amber-500" />
-            <span className="text-sm text-muted-foreground">Speed</span>
+            <span className="text-sm text-muted-foreground">{getTranslation(language, 'wpmAchieved')}</span>
           </div>
           <div className="text-3xl font-bold text-amber-500">{stats.wpm}</div>
-          <div className="text-xs text-muted-foreground">WPM</div>
+          <div className="text-xs text-muted-foreground">{getTranslation(language, 'wpm')}</div>
         </motion.div>
 
         <motion.div
@@ -93,10 +104,10 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         >
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm text-muted-foreground">Accuracy</span>
+            <span className="text-sm text-muted-foreground">{getTranslation(language, 'accuracyAchieved')}</span>
           </div>
           <div className="text-3xl font-bold text-emerald-500">{stats.accuracy}%</div>
-          <div className="text-xs text-muted-foreground">correct</div>
+          <div className="text-xs text-muted-foreground">{isArabic ? 'صحيح' : 'correct'}</div>
         </motion.div>
 
         <motion.div
@@ -107,10 +118,10 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         >
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-4 h-4 text-blue-500" />
-            <span className="text-sm text-muted-foreground">Duration</span>
+            <span className="text-sm text-muted-foreground">{getTranslation(language, 'timeElapsed')}</span>
           </div>
-          <div className="text-3xl font-bold text-blue-500">{formatTime(stats.elapsedTime)}</div>
-          <div className="text-xs text-muted-foreground">total time</div>
+          <div className="text-3xl font-bold text-blue-500">{formatTime(stats.elapsedTime, isArabic)}</div>
+          <div className="text-xs text-muted-foreground">{isArabic ? 'الوقت الكلي' : 'total time'}</div>
         </motion.div>
 
         <motion.div
@@ -121,10 +132,10 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         >
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-purple-500" />
-            <span className="text-sm text-muted-foreground">Characters</span>
+            <span className="text-sm text-muted-foreground">{getTranslation(language, 'characters')}</span>
           </div>
           <div className="text-3xl font-bold text-purple-500">{stats.correctCharacters}</div>
-          <div className="text-xs text-muted-foreground">of {stats.totalCharacters}</div>
+          <div className="text-xs text-muted-foreground">{isArabic ? `من ${stats.totalCharacters}` : `of ${stats.totalCharacters}`}</div>
         </motion.div>
       </div>
 
@@ -136,14 +147,14 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
           className="flex items-center gap-2"
         >
           <Home className="w-4 h-4" />
-          Home
+          {getTranslation(language, 'returnHome')}
         </Button>
         <Button
           onClick={onRestart}
           className="flex items-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
-          Try Again
+          {getTranslation(language, 'tryAgain')}
         </Button>
       </div>
     </motion.div>

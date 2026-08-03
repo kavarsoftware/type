@@ -4,6 +4,8 @@ import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { TimerMode, TimerSettings } from '@/lib/typing/types';
 import { cn } from '@/lib/utils';
 
@@ -12,19 +14,21 @@ interface TimerSettingsProps {
   onSettingsChange: (settings: TimerSettings) => void;
 }
 
-const timerOptions: { mode: TimerMode; label: string }[] = [
-  { mode: 'none', label: 'No Timer' },
-  { mode: '1min', label: '1 Min' },
-  { mode: '5min', label: '5 Min' },
-  { mode: 'custom', label: 'Custom' },
-];
-
 export function TimerSettings({ settings, onSettingsChange }: TimerSettingsProps) {
+  const { language } = useTypingStore();
+
+  const timerOptions: { mode: TimerMode; labelKey: any }[] = [
+    { mode: 'none', labelKey: 'noTimer' },
+    { mode: '1min', labelKey: 'oneMin' },
+    { mode: '5min', labelKey: 'fiveMin' },
+    { mode: 'custom', labelKey: 'customTimer' },
+  ];
+
   return (
     <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/30 border border-border/50">
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Clock className="w-4 h-4" />
-        Timer Mode
+        {getTranslation(language, 'timerSettings')}
       </div>
       <div className="flex flex-wrap gap-2">
         {timerOptions.map((option) => (
@@ -38,14 +42,14 @@ export function TimerSettings({ settings, onSettingsChange }: TimerSettingsProps
               settings.mode === option.mode && "shadow-md"
             )}
           >
-            {option.label}
+            {getTranslation(language, option.labelKey)}
           </Button>
         ))}
       </div>
       {settings.mode === 'custom' && (
         <div className="flex items-center gap-3 mt-2">
           <Label htmlFor="custom-time" className="text-sm text-muted-foreground whitespace-nowrap">
-            Seconds:
+            {getTranslation(language, 'seconds')}:
           </Label>
           <Input
             id="custom-time"

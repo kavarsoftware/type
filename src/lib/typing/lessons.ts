@@ -1,4 +1,5 @@
-import type { Lesson, Category } from './types';
+import type { Lesson, Category, Language } from './types';
+import { allArabicLessons, arabicCategories } from './arabicLessons';
 
 // Beginner Lessons - Progressive Learning Path
 export const beginnerLessons: Lesson[] = [
@@ -357,3 +358,12 @@ export const categories: Category[] = [
 
 // Export all lessons
 export const allLessons = [...beginnerLessons, ...intermediateLessons, ...advancedLessons];
+
+export function getLessons(lang: Language): Lesson[] {
+  return lang === 'ar' ? allArabicLessons : allLessons;
+}
+
+export function getCategories(lang: Language): Category[] {
+  return lang === 'ar' ? arabicCategories : categories;
+}
+

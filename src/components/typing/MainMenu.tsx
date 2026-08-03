@@ -3,9 +3,9 @@
 import { motion } from 'framer-motion';
 import { BookOpen, GraduationCap, Lightbulb, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useTypingStore } from '@/store/typing-store';
+import { getTranslation } from '@/lib/i18n/translations';
 import type { AppMode } from '@/lib/typing/types';
 
 interface MainMenuProps {
@@ -13,7 +13,7 @@ interface MainMenuProps {
 }
 
 export function MainMenu({ onNavigate }: MainMenuProps) {
-  const { progress } = useTypingStore();
+  const { progress, language } = useTypingStore();
   
   const lessonProgress = progress.completedLessons.length > 0 
     ? Math.round((progress.completedLessons.length / 20) * 100) 
@@ -22,8 +22,8 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
   const menuItems = [
     {
       icon: GraduationCap,
-      title: 'Beginner Lessons',
-      description: 'Start from the basics. Learn home row, then expand to all keys.',
+      title: getTranslation(language, 'beginnerLessonsTitle'),
+      description: getTranslation(language, 'beginnerLessonsDesc'),
       mode: 'lesson' as AppMode,
       color: 'text-emerald-500',
       bgColor: 'bg-emerald-500/10',
@@ -31,8 +31,8 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
     },
     {
       icon: Lightbulb,
-      title: 'Practice Topics',
-      description: 'Type educational content from biology, psychology, technology, and more.',
+      title: getTranslation(language, 'practiceTopicsTitle'),
+      description: getTranslation(language, 'practiceTopicsDesc'),
       mode: 'practice' as AppMode,
       color: 'text-amber-500',
       bgColor: 'bg-amber-500/10',
@@ -40,8 +40,8 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
     },
     {
       icon: FileText,
-      title: 'Custom Text',
-      description: 'Paste your own text or upload files (.txt, .pdf, .docx) to practice.',
+      title: getTranslation(language, 'customTextTitle'),
+      description: getTranslation(language, 'customTextDesc'),
       mode: 'custom' as AppMode,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
@@ -60,12 +60,11 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
         <div className="flex items-center justify-center gap-3">
           <BookOpen className="w-10 h-10 text-primary" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-            TypeMaster
+            {getTranslation(language, 'appTitle')}
           </h1>
         </div>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-          Master touch typing with structured lessons and educational content.
-          Learn while you type!
+          {getTranslation(language, 'tagline')}
         </p>
       </motion.div>
 
@@ -81,10 +80,10 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-primary" />
-                  Your Progress
+                  {getTranslation(language, 'yourProgress')}
                 </CardTitle>
                 <span className="text-sm text-muted-foreground">
-                  {progress.totalSessions} sessions completed
+                  {progress.totalSessions} {getTranslation(language, 'sessionsCompleted')}
                 </span>
               </div>
             </CardHeader>
@@ -92,24 +91,24 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-3 rounded-lg bg-background/50">
                   <div className="text-2xl font-bold text-amber-500">{progress.bestWpm}</div>
-                  <div className="text-xs text-muted-foreground">Best WPM</div>
+                  <div className="text-xs text-muted-foreground">{getTranslation(language, 'bestWpm')}</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-background/50">
                   <div className="text-2xl font-bold text-emerald-500">{progress.averageAccuracy}%</div>
-                  <div className="text-xs text-muted-foreground">Avg Accuracy</div>
+                  <div className="text-xs text-muted-foreground">{getTranslation(language, 'avgAccuracy')}</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-background/50">
                   <div className="text-2xl font-bold text-blue-500">{Math.floor(progress.totalPracticeTime / 60)}</div>
-                  <div className="text-xs text-muted-foreground">Minutes Practiced</div>
+                  <div className="text-xs text-muted-foreground">{getTranslation(language, 'minutesPracticed')}</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-background/50">
                   <div className="text-2xl font-bold text-purple-500">{progress.completedLessons.length}</div>
-                  <div className="text-xs text-muted-foreground">Lessons Done</div>
+                  <div className="text-xs text-muted-foreground">{getTranslation(language, 'lessonsDone')}</div>
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Lessons Progress</span>
+                  <span className="text-muted-foreground">{getTranslation(language, 'lessonsProgress')}</span>
                   <span className="font-medium">{lessonProgress}%</span>
                 </div>
                 <Progress value={lessonProgress} className="h-2" />
@@ -151,7 +150,7 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
         transition={{ delay: 0.5 }}
         className="text-center text-sm text-muted-foreground"
       >
-        <p>Press any key to start typing once you select a mode</p>
+        <p>{getTranslation(language, 'pressAnyKey')}</p>
       </motion.div>
     </div>
   );

@@ -11,6 +11,9 @@ interface ResultsScreenProps {
   stats: TypingStats;
   onRestart: () => void;
   onGoHome: () => void;
+  lessonFeedback?: string;
+  onContinue?: () => void;
+  continueLabel?: string;
 }
 
 function formatTime(seconds: number, isArabic: boolean): string {
@@ -22,7 +25,7 @@ function formatTime(seconds: number, isArabic: boolean): string {
   return isArabic ? `${secs} ثانية` : `${secs}s`;
 }
 
-export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps) {
+export function ResultsScreen({ stats, onRestart, onGoHome, lessonFeedback, onContinue, continueLabel }: ResultsScreenProps) {
   const { language } = useTypingStore();
   const isArabic = language === 'ar';
   
@@ -77,7 +80,7 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         <h2 className="text-2xl font-bold mb-2">
           {getTranslation(language, 'sessionComplete')}
         </h2>
-        <p className="text-muted-foreground">{getWpmMessage()}</p>
+        <p className="text-muted-foreground">{lessonFeedback || getWpmMessage()}</p>
       </div>
 
       {/* Stats Grid */}
@@ -139,8 +142,9 @@ export function ResultsScreen({ stats, onRestart, onGoHome }: ResultsScreenProps
         </motion.div>
       </div>
 
+      {onContinue && <Button onClick={onContinue} size="lg">{continueLabel}</Button>}
       {/* Actions */}
-      <div className="flex gap-4 mt-4">
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
         <Button
           variant="outline"
           onClick={onGoHome}

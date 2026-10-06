@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { BookOpen, GraduationCap, Lightbulb, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { getLessons } from '@/lib/typing/lessons';
+import { Button } from '@/components/ui/button';
 import { useTypingStore } from '@/store/typing-store';
 import { getTranslation } from '@/lib/i18n/translations';
 import type { AppMode } from '@/lib/typing/types';
@@ -15,9 +17,9 @@ interface MainMenuProps {
 export function MainMenu({ onNavigate }: MainMenuProps) {
   const { progress, language } = useTypingStore();
   
-  const lessonProgress = progress.completedLessons.length > 0 
-    ? Math.round((progress.completedLessons.length / 20) * 100) 
-    : 0;
+  const lessons = getLessons(language);
+  const completedCount = lessons.filter(l => progress.completedLessons.includes(l.id)).length;
+  const lessonProgress = Math.round(completedCount / lessons.length * 100);
 
   const menuItems = [
     {
@@ -68,6 +70,11 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
         </p>
       </motion.div>
 
+      <div className="p-6 rounded-xl border bg-background/80 space-y-3">
+        <h2 className="text-xl font-semibold">{language === 'ar' ? 'تعلم خطوة بخطوة' : 'Learn one key at a time'}</h2>
+        <p className="text-muted-foreground">{language === 'ar' ? 'تعرف على مواضع الأصابع ثم تدرب على الحروف والكلمات والجمل. ركز على الدقة قبل السرعة.' : 'Learn finger placement, build muscle memory with short drills, then practice words and sentences. Accuracy comes before speed.'}</p>
+        <Button onClick={() => onNavigate('lesson')}>{language === 'ar' ? 'ابدأ الدروس' : completedCount ? 'Continue lessons' : 'Start learning'}</Button>
+      </div>
       {/* Progress Overview */}
       {progress.totalSessions > 0 && (
         <motion.div
@@ -102,7 +109,7 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
                   <div className="text-xs text-muted-foreground">{getTranslation(language, 'minutesPracticed')}</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-background/50">
-                  <div className="text-2xl font-bold text-purple-500">{progress.completedLessons.length}</div>
+                  <div className="text-2xl font-bold text-purple-500">{completedCount}</div>
                   <div className="text-xs text-muted-foreground">{getTranslation(language, 'lessonsDone')}</div>
                 </div>
               </div>

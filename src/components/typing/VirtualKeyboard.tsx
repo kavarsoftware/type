@@ -46,10 +46,10 @@ export function VirtualKeyboard() {
   }
 
   // English mode: determine expected key
-  const englishExpectedLower = !isArabic ? expectedChar.toLowerCase() : '';
+  const englishExpectedLower = !isArabic ? (Object.entries(englishShiftChars).find(([, char]) => char === expectedChar)?.[0] || expectedChar.toLowerCase()) : '';
   const englishNeedsShift = !isArabic &&
     expectedChar === expectedChar.toUpperCase() &&
-    expectedChar !== expectedChar.toLowerCase();
+    expectedChar !== expectedChar.toLowerCase() || (!isArabic && Object.values(englishShiftChars).includes(expectedChar));
 
   return (
     <div className="flex flex-col items-center gap-1.5 p-4 bg-muted/30 rounded-xl backdrop-blur-sm">
@@ -107,7 +107,7 @@ export function VirtualKeyboard() {
                       <span
                         className={cn(
                           'absolute top-0.5 right-0.5 text-[9px] leading-none transition-colors',
-                          highlightNeedsShift && isHighlighted
+                          (highlightNeedsShift || englishNeedsShift) && isHighlighted
                             ? 'text-primary font-bold'
                             : 'text-muted-foreground/40'
                         )}
@@ -159,8 +159,8 @@ export function VirtualKeyboard() {
         <div
           className={cn(
             'w-14 h-10 rounded-lg bg-background border border-border flex items-center justify-center text-xs font-medium transition-all duration-75',
-            highlightNeedsShift && 'bg-primary/20 border-primary scale-105 text-primary',
-            !highlightNeedsShift && 'text-muted-foreground'
+            (highlightNeedsShift || englishNeedsShift) && 'bg-primary/20 border-primary scale-105 text-primary',
+            !(highlightNeedsShift || englishNeedsShift) && 'text-muted-foreground'
           )}
         >
           {getTranslation(language, 'shift')}
@@ -189,8 +189,8 @@ export function VirtualKeyboard() {
         <div
           className={cn(
             'w-14 h-10 rounded-lg bg-background border border-border flex items-center justify-center text-xs font-medium transition-all duration-75',
-            highlightNeedsShift && 'bg-primary/20 border-primary scale-105 text-primary',
-            !highlightNeedsShift && 'text-muted-foreground'
+            (highlightNeedsShift || englishNeedsShift) && 'bg-primary/20 border-primary scale-105 text-primary',
+            !(highlightNeedsShift || englishNeedsShift) && 'text-muted-foreground'
           )}
         >
           {getTranslation(language, 'shift')}

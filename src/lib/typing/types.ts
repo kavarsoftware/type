@@ -38,6 +38,7 @@ export interface Lesson {
   type: 'letters' | 'words' | 'sentences' | 'paragraph';
   content: string[];
   category?: string;
+  focusKeys?: string;
 }
 
 export interface Category {
@@ -59,6 +60,7 @@ export type AppMode = 'menu' | 'lesson' | 'practice' | 'custom' | 'results';
 
 export interface Progress {
   completedLessons: string[];
+  lessonExercises?: Record<string, number[]>;
   totalSessions: number;
   averageWpm: number;
   averageAccuracy: number;

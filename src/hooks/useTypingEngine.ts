@@ -49,9 +49,8 @@ export function useTypingEngine() {
     const wpm = Math.round(words / minutes) || 0;
 
     // Accuracy calculation
-    const accuracy = totalCharacters > 0 
-      ? Math.round((correctCharacters / totalCharacters) * 100) 
-      : 100;
+    const attempts = correctCharacters + errors;
+    const accuracy = attempts > 0 ? Math.round((correctCharacters / attempts) * 100) : 100;
 
     return {
       wpm,
@@ -62,7 +61,7 @@ export function useTypingEngine() {
       totalWords: Math.round(totalCharacters / 5),
       elapsedTime,
     };
-  }, [typedText, currentText, elapsedTime]);
+  }, [typedText, currentText, elapsedTime, errors]);
 
   const handleComplete = useCallback(() => {
     setIsTyping(false);
@@ -80,6 +79,7 @@ export function useTypingEngine() {
       wpm: stats.wpm,
       accuracy: stats.accuracy,
       duration: stats.elapsedTime,
+      lessonId: useTypingStore.getState().selectedLesson?.id,
       mode: contentSource === 'lesson' ? 'lesson' : contentSource === 'category' ? 'practice' : 'custom',
     };
     
@@ -118,14 +118,16 @@ export function useTypingEngine() {
 
   // Check for completion (non-timer mode)
   useEffect(() => {
-    if (currentText && typedText.length >= currentText.length && timerSettings.mode === 'none') {
+    if (!isComplete && currentText && typedText.length >= currentText.length) {
       completeRef.current();
     }
-  }, [typedText, currentText, timerSettings.mode]);
+  }, [typedText, currentText, isComplete]);
 
   // Handle keyboard input
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (isComplete) return;
+    const { currentText, typedText, isTyping, isComplete, errors } = useTypingStore.getState();
+    const target = e.target as HTMLElement | null;
+    if (!currentText || isComplete || target?.closest('button, input, textarea, select, a, [contenteditable="true"], [role="button"]')) return;
 
     // Prevent default for certain keys during typing
     if (e.key === 'Tab') {
@@ -145,6 +147,7 @@ export function useTypingEngine() {
 
     // Handle backspace
     if (e.key === 'Backspace') {
+      e.preventDefault();
       if (typedText.length > 0) {
         setTypedText(typedText.slice(0, -1));
       }
@@ -156,6 +159,7 @@ export function useTypingEngine() {
       // Map Latin key to Arabic character when in Arabic mode
       const isArabic = isArabicText(currentText);
       const char = isArabic ? mapKeyToArabic(e.key) : e.key;
+      if (typedText.length >= currentText.length) return;
       const newTyped = typedText + char;
       
       // Check if character is incorrect

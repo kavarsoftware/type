@@ -10,7 +10,7 @@ export const translations = {
     // Main Menu
     menuTitle: 'Main Menu',
     beginnerLessonsTitle: 'Beginner Lessons',
-    beginnerLessonsDesc: 'Start from the basics. Learn home row, then expand to all keys.',
+    beginnerLessonsDesc: 'Start with J, F, and Space, then learn a few new keys at a time.',
     practiceTopicsTitle: 'Practice Topics',
     practiceTopicsDesc: 'Type educational content from biology, psychology, technology, and more.',
     customTextTitle: 'Custom Text',

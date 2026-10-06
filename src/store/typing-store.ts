@@ -61,6 +61,8 @@ interface TypingState {
   addSessionResult: (result: SessionResult) => void;
   markLessonComplete: (lessonId: string) => void;
   
+  markExerciseComplete: (lessonId: string, index: number) => void;
+
   // Reset
   resetTyping: () => void;
   resetSession: () => void;
@@ -154,6 +156,13 @@ export const useTypingStore = create<TypingState>()(
             recentSessions: newSessions,
           },
         });
+      },
+      markExerciseComplete: (lessonId, index) => {
+        const progress = get().progress;
+        const completed = progress.lessonExercises?.[lessonId] || [];
+        if (!completed.includes(index)) set({ progress: {
+          ...progress, lessonExercises: { ...progress.lessonExercises, [lessonId]: [...completed, index] },
+        } });
       },
       markLessonComplete: (lessonId) => {
         const current = get().progress;

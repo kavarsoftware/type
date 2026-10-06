@@ -1,195 +1,60 @@
 import type { Lesson, Category, Language } from './types';
 import { allArabicLessons, arabicCategories } from './arabicLessons';
 
-// Beginner Lessons - Progressive Learning Path
-export const beginnerLessons: Lesson[] = [
-  // Home Row - Level 1
-  {
-    id: 'home-row-1',
-    title: 'Home Row - Left Hand',
-    description: 'Learn the left hand home row keys: A, S, D, F',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'a a a a a',
-      's s s s s',
-      'd d d d d',
-      'f f f f f',
-      'a s d f',
-      'f d s a',
-      'a s a s',
-      'd f d f',
-    ],
-  },
-  {
-    id: 'home-row-2',
-    title: 'Home Row - Right Hand',
-    description: 'Learn the right hand home row keys: J, K, L, ;',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'j j j j j',
-      'k k k k k',
-      'l l l l l',
-      '; ; ; ; ;',
-      'j k l ;',
-      '; l k j',
-      'j k j k',
-      'l ; l ;',
-    ],
-  },
-  {
-    id: 'home-row-3',
-    title: 'Home Row - Both Hands',
-    description: 'Practice using both hands on the home row',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'a s d f j k l ;',
-      'f f j j',
-      'd d k k',
-      's s l l',
-      'a a ; ;',
-      'a s d f j k l ;',
-      'f j d k s l a ;',
-      'a ; s l d k f j',
-    ],
-  },
-  // Home Row Words
-  {
-    id: 'home-row-words',
-    title: 'Home Row Words',
-    description: 'Type simple words using home row keys',
-    level: 'beginner',
-    type: 'words',
-    content: [
-      'as ad ask lad sad fad',
-      'fall pass lass dash',
-      'alkali salad alas falls',
-      'adds flask asks lads',
-      'fad dall dask sall',
-    ],
-  },
-  // Top Row
-  {
-    id: 'top-row-1',
-    title: 'Top Row - Left Hand',
-    description: 'Learn the left hand top row keys: Q, W, E, R',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'q q q q q',
-      'w w w w w',
-      'e e e e e',
-      'r r r r r',
-      'q w e r',
-      'r e w q',
-      'q w q w',
-      'e r e r',
-    ],
-  },
-  {
-    id: 'top-row-2',
-    title: 'Top Row - Right Hand',
-    description: 'Learn the right hand top row keys: U, I, O, P',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'u u u u u',
-      'i i i i i',
-      'o o o o o',
-      'p p p p p',
-      'u i o p',
-      'p o i u',
-      'u i u i',
-      'o p o p',
-    ],
-  },
-  {
-    id: 'top-row-words',
-    title: 'Top Row Words',
-    description: 'Type words using top row keys',
-    level: 'beginner',
-    type: 'words',
-    content: [
-      'we are our poor',
-      'type your write',
-      'pure power more',
-      'piece quite quote',
-      'write poetry power',
-    ],
-  },
-  // Bottom Row
-  {
-    id: 'bottom-row-1',
-    title: 'Bottom Row - Left Hand',
-    description: 'Learn the left hand bottom row keys: Z, X, C, V',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'z z z z z',
-      'x x x x x',
-      'c c c c c',
-      'v v v v v',
-      'z x c v',
-      'v c x z',
-      'z x z x',
-      'c v c v',
-    ],
-  },
-  {
-    id: 'bottom-row-2',
-    title: 'Bottom Row - Right Hand',
-    description: 'Learn the right hand bottom row keys: M, ,, ., /',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'm m m m m',
-      ', , , , ,',
-      '. . . . .',
-      '/ / / / /',
-      'm , . /',
-      '/ . , m',
-      'm , m ,',
-      '. / . /',
-    ],
-  },
-  // Combined Practice
-  {
-    id: 'all-rows-letters',
-    title: 'All Rows - Letters',
-    description: 'Practice letters from all rows',
-    level: 'beginner',
-    type: 'letters',
-    content: [
-      'a q z a q z',
-      's w x s w x',
-      'd e c d e c',
-      'f r v f r v',
-      'j u m j u m',
-      'k i , k i ,',
-      'l o . l o .',
-      '; p / ; p /',
-    ],
-  },
-  {
-    id: 'simple-sentences',
-    title: 'Simple Sentences',
-    description: 'Type simple sentences to build fluency',
-    level: 'beginner',
-    type: 'sentences',
-    content: [
-      'The cat sat on the mat.',
-      'A quick brown fox jumps.',
-      'She sells sea shells.',
-      'The sun is bright today.',
-      'We can see the stars.',
-      'He has a red car.',
-      'They went to the park.',
-      'I like to read books.',
-    ],
-  },
+// Introduce a few keys at a time, then reinforce all previously learned keys.
+// Exercise text is original; only the teaching sequence follows the reference.
+const keyGroups = [
+  ['jf-space', 'J, F, and Space', 'jf'],
+  ['urk', 'U, R, and K Keys', 'urk'],
+  ['dei', 'D, E, and I Keys', 'dei'],
+  ['cgn', 'C, G, and N Keys', 'cgn'],
+  ['tsl', 'T, S, and L Keys', 'tsl'],
+  ['oba', 'O, B, and A Keys', 'oba'],
+  ['vhm', 'V, H, and M Keys', 'vhm'],
+  ['period-comma', 'Period and Comma', '.,'],
+  ['wx-semicolon', 'W, X, and Semicolon', 'wx;'],
+  ['qyp', 'Q, Y, and P Keys', 'qyp'],
+  ['z', 'Z Key', 'z'],
 ];
+
+const practiceWords = 'if did rid red fed jug fur rug kid dig run fun grin ring drum girl curl flag gift dusk silk left lift still rest tree lake sail little fall ball boat road tool book good food bloom move home have calm vivid mix wax six quick quiz zip happy play'.split(' ');
+
+export const beginnerLessons: Lesson[] = [];
+let learnedKeys = '';
+keyGroups.forEach(([id, title, keys], index) => {
+  learnedKeys += keys;
+  const availableWords = practiceWords.filter(word => [...word].every(char => learnedKeys.includes(char)));
+  beginnerLessons.push({
+    id: `keys-${id}`, title,
+    description: 'Learn finger placement, practice new keys, then mix with familiar keys.',
+    level: 'beginner', type: 'letters', focusKeys: keys,
+    content: [
+      ...[...keys].map(key => Array(6).fill(key).join(' ')),
+      Array(4).fill([...keys].join('')).join(' '),
+      [...learnedKeys].map(key => key + keys[0]).join(' '),
+      availableWords.length >= 3 ? availableWords.slice(-8).join(' ') : Array(4).fill('fj jf').join(' '),
+    ],
+  });
+  if ([3, 7, 10].includes(index)) {
+    beginnerLessons.push({
+      id: `keys-review-${index}`, title: `Beginner Review ${index === 3 ? 1 : index === 7 ? 2 : 3}`,
+      description: 'Reinforce the keys you have learned. Aim for accuracy before speed.',
+      level: 'beginner', type: 'words',
+      content: [learnedKeys.split('').join(' '), availableWords.slice(-12).join(' '), availableWords.slice(0, 12).reverse().join(' ')],
+    });
+  }
+});
+beginnerLessons.push({
+  id: 'keys-shift', title: 'Shift and Capital Letters',
+  description: 'Hold Shift with the opposite hand to type a capital letter.',
+  level: 'beginner', type: 'sentences', focusKeys: 'shift',
+  content: ['a A j J f F k K', 'Sam and Kim read.', 'The bird can fly.', 'I like to learn.'],
+}, {
+  id: 'keys-assessment', title: 'Beginner Assessment',
+  description: 'Put your skills together with full sentences.',
+  level: 'beginner', type: 'sentences',
+  content: ['The quick fox jumps over a lazy dog.', 'Keep your hands relaxed, and look at the screen.', 'Practice a little each day. Accuracy comes first.'],
+});
 
 // Intermediate Lessons
 export const intermediateLessons: Lesson[] = [

@@ -18,6 +18,8 @@ import { useTypingEngine } from '@/hooks/useTypingEngine';
 import { getTranslation } from '@/lib/i18n/translations';
 import type { AppMode, Lesson, Category } from '@/lib/typing/types';
 import Image from 'next/image';
+import { getLessons } from '@/lib/typing/lessons';
+import { LessonGuide } from '@/components/typing/LessonGuide';
 
 export default function TypingApp() {
   const {
@@ -38,6 +40,8 @@ export default function TypingApp() {
     timerSettings,
     setTimerSettings,
     markLessonComplete,
+    markExerciseComplete,
+    progress,
     customTexts,
     setCustomTexts,
     customTextIndex,
@@ -53,6 +57,8 @@ export default function TypingApp() {
     stats,
     restart,
   } = useTypingEngine();
+
+  const focusPractice = useCallback((node: HTMLDivElement | null) => node?.focus(), []);
 
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
@@ -88,11 +94,15 @@ export default function TypingApp() {
   }, [resetSession, setMode, setSelectedParagraphIndex]);
 
   const handleSelectLesson = useCallback((lesson: Lesson) => {
+    const completed = useTypingStore.getState().progress.lessonExercises?.[lesson.id] || [];
+    const nextExercise = lesson.content.findIndex((_, index) => !completed.includes(index));
+    setCurrentExerciseIndex(nextExercise < 0 ? 0 : nextExercise);
+    setTimerSettings({ mode: 'none' });
     setSelectedLesson(lesson);
-    setCurrentText(lesson.content[0]);
+    setCurrentText(lesson.content[nextExercise < 0 ? 0 : nextExercise]);
     setContentSource('lesson');
     resetTyping();
-  }, [setSelectedLesson, setCurrentText, setContentSource, resetTyping]);
+  }, [setSelectedLesson, setCurrentText, setContentSource, resetTyping, setTimerSettings]);
 
   const handleSelectCategory = useCallback((category: Category) => {
     setSelectedCategory(category);
@@ -187,12 +197,20 @@ export default function TypingApp() {
     }
   }, [hasPrevCustom, customTextIndex, customTexts, setCustomTextIndex, setCurrentText, resetTyping]);
 
-  // Mark lesson complete when done
+  const exercisePassed = isComplete && typedText.length === currentText.length && stats.accuracy >= 90;
+  const passedExercises = selectedLesson ? progress.lessonExercises?.[selectedLesson.id] || [] : [];
+  const nextLesson = selectedLesson ? getLessons(language)[getLessons(language).findIndex(l => l.id === selectedLesson.id) + 1] : undefined;
+  const lessonFinished = !!selectedLesson && selectedLesson.content.every((_, index) => passedExercises.includes(index));
+
   useEffect(() => {
-    if (isComplete && selectedLesson && currentExerciseIndex === selectedLesson.content.length - 1) {
-      markLessonComplete(selectedLesson.id);
+    if (mode === 'lesson' && selectedLesson && exercisePassed) {
+      markExerciseComplete(selectedLesson.id, currentExerciseIndex);
     }
-  }, [isComplete, selectedLesson, currentExerciseIndex, markLessonComplete]);
+  }, [mode, selectedLesson, exercisePassed, currentExerciseIndex, markExerciseComplete]);
+
+  useEffect(() => {
+    if (mode === 'lesson' && selectedLesson && lessonFinished) markLessonComplete(selectedLesson.id);
+  }, [mode, selectedLesson, lessonFinished, markLessonComplete]);
 
   return (
     <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="relative min-h-screen flex flex-col">
@@ -299,6 +317,9 @@ export default function TypingApp() {
           {currentText && !isComplete && (
             <motion.div
               key="typing"
+              ref={focusPractice}
+              tabIndex={-1}
+              aria-label={language === 'ar' ? 'منطقة تدريب الكتابة' : 'Typing practice area'}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -338,7 +359,7 @@ export default function TypingApp() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {!isTyping && (
+                  {!isTyping && mode !== 'lesson' && (
                     <TimerSettings
                       settings={timerSettings}
                       onSettingsChange={setTimerSettings}
@@ -350,6 +371,9 @@ export default function TypingApp() {
                 </div>
               </div>
 
+              {mode === 'lesson' && selectedLesson && (
+                <LessonGuide lesson={selectedLesson} exerciseIndex={currentExerciseIndex} />
+              )}
               {/* Stats Panel */}
               <div className="mb-6">
                 <StatsPanel
@@ -369,8 +393,10 @@ export default function TypingApp() {
                 </div>
 
                 {/* Virtual Keyboard */}
-                <div className="flex justify-center mb-4">
+                <div className="overflow-x-auto mb-4" dir="ltr">
+                  <div className="flex justify-center min-w-[700px]">
                   <VirtualKeyboard />
+                  </div>
                 </div>
 
                 {/* Navigation for exercises/paragraphs */}
@@ -391,7 +417,7 @@ export default function TypingApp() {
                       variant="outline"
                       size="sm"
                       onClick={contentSource === 'lesson' ? handleNextExercise : (contentSource === 'category' ? handleNextParagraph : handleNextCustom)}
-                      disabled={contentSource === 'lesson' ? !hasNextExercise : (contentSource === 'category' ? !hasNextParagraph : !hasNextCustom)}
+                      disabled={contentSource === 'lesson' ? (!hasNextExercise || !passedExercises.includes(currentExerciseIndex)) : (contentSource === 'category' ? !hasNextParagraph : !hasNextCustom)}
                     >
                       {getTranslation(language, 'next')}
                       <ChevronRight className="w-4 h-4 mx-1 rtl:rotate-180" />
@@ -415,6 +441,14 @@ export default function TypingApp() {
                 stats={stats}
                 onRestart={handleRestart}
                 onGoHome={handleGoHome}
+                lessonFeedback={mode === 'lesson' ? (exercisePassed
+                  ? (lessonFinished ? (language === 'ar' ? 'أكملت جميع تمارين الدرس!' : 'Lesson mastered! Every exercise is complete.') : (language === 'ar' ? 'أحسنت! تابع إلى التمرين التالي.' : 'Well done! Continue to the next exercise.'))
+                  : (language === 'ar' ? 'أعد التمرين بدقة ٩٠٪ على الأقل. ركز على الدقة قبل السرعة.' : 'Repeat this exercise with at least 90% accuracy. Slow down and focus on the correct fingers.')) : undefined}
+                onContinue={mode === 'lesson' && exercisePassed && (hasNextExercise || nextLesson) ? () => {
+                  if (hasNextExercise) handleNextExercise();
+                  else if (nextLesson) handleSelectLesson(nextLesson);
+                } : undefined}
+                continueLabel={hasNextExercise ? (language === 'ar' ? 'التمرين التالي' : 'Next exercise') : (language === 'ar' ? 'الدرس التالي' : 'Next lesson')}
               />
             </motion.div>
           )}
